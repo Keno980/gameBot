@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Apple!</title>
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 4px solid #fff;
+            background: #87CEEB;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        p {
+            margin: 5px 0 15px 0;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Catch the Apple!</h1>
+    <p>Use the <b>Left</b> and <b>Right</b> arrow keys to move the basket.</p>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let score = 0;
+        let misses = 0;
+        const maxMisses = 5;
+        let isGameOver = false;
+
+        const basket = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 40,
+            width: 80,
+            height: 20,
+            speed: 8,
+            dx: 0
+        };
+
+        const apple = {
+            x: Math.random() * (canvas.width - 30),
+            y: -30,
+            radius: 15,
+            speed: 3
+        };
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft") basket.dx = -basket.speed;
+            if (e.key === "ArrowRight") basket.dx = basket.speed;
+            if (e.key === " " && isGameOver) resetGame();
+        });
+
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowLeft" && basket.dx < 0) basket.dx = 0;
+            if (e.key === "ArrowRight" && basket.dx > 0) basket.dx = 0;
+        });
+
+        function resetGame() {
+            score = 0;
+            misses = 0;
+            isGameOver = false;
+            apple.y = -30;
+            apple.x = Math.random() * (canvas.width - 30);
+            apple.speed = 3;
+            loop();
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            basket.x += basket.dx;
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+
+            apple.y += apple.speed;
+
+            if (
+                apple.y + apple.radius >= basket.y &&
+                apple.x >= basket.x &&
+                apple.x <= basket.x + basket.width
+            ) {
+                score++;
+                apple.y = -30;
+                apple.x = Math.random() * (canvas.width - 30);
+                apple.speed += 0.2;
+            }
+
+            if (apple.y > canvas.height) {
+                misses++;
+                apple.y = -30;
+                apple.x = Math.random() * (canvas.width - 30);
+
+                if (misses >= maxMisses) {
+                    isGameOver = true;
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!isGameOver) {
+                ctx.fillStyle = "#8B4513";
+                ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+
+                ctx.beginPath();
+                ctx.arc(apple.x, apple.y, apple.radius, 0, Math.PI * 2);
+                ctx.fillStyle = "#FF0000";
+                ctx.fill();
+                ctx.closePath();
+
+                ctx.fillStyle = "#000";
+                ctx.font = "16px Arial";
+                ctx.fillText(`Score: ${score}`, 20, 30);
+                ctx.fillText(`Misses: ${misses}/${maxMisses}`, 20, 55);
+            } else {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#fff";
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 30);
+
+                ctx.font = "18px Arial";
+                ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+                ctx.fillText("Press Spacebar to Restart", canvas.width / 2, canvas.height / 2 + 50);
+                ctx.textAlign = "left";
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            if (!isGameOver) {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        loop();
+    </script>
+</body>
+</html>
