@@ -20,6 +20,7 @@
             border: 4px solid #fff;
             background: #87CEEB;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            touch-action: none;
         }
         h1 {
             margin: 0 0 10px 0;
@@ -34,7 +35,7 @@
 <body>
 
     <h1>Catch the Apple!</h1>
-    <p>Use the <b>Left</b> and <b>Right</b> arrow keys to move the basket.</p>
+    <p>Use the <b>Left</b> and <b>Right</b> arrow keys or drag/tap on the canvas to move the basket.</p>
     <canvas id="gameCanvas" width="400" height="500"></canvas>
 
     <script>
@@ -62,6 +63,10 @@
             speed: 3
         };
 
+        function moveBasketTo(xPos) {
+            basket.x = Math.min(Math.max(xPos - basket.width / 2, 0), canvas.width - basket.width);
+        }
+
         window.addEventListener("keydown", (e) => {
             if (e.key === "ArrowLeft") basket.dx = -basket.speed;
             if (e.key === "ArrowRight") basket.dx = basket.speed;
@@ -71,6 +76,20 @@
         window.addEventListener("keyup", (e) => {
             if (e.key === "ArrowLeft" && basket.dx < 0) basket.dx = 0;
             if (e.key === "ArrowRight" && basket.dx > 0) basket.dx = 0;
+        });
+
+        canvas.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "mouse" && event.button !== 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+            moveBasketTo(x);
+        });
+
+        canvas.addEventListener("pointermove", (event) => {
+            if (event.pressure === 0 && event.pointerType !== "touch") return;
+            const rect = canvas.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+            moveBasketTo(x);
         });
 
         function resetGame() {
